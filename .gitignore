@@ -17,6 +17,7 @@ install_manifest.txt
 
 # Packaging artifacts
 *.deb
+*.deb.sha256
 *.tgz
 *.tar.gz
 *.zip

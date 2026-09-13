@@ -38,8 +38,8 @@ modules:
       - -DCMAKE_INSTALL_PREFIX=/app/plugins/MultistreamRtmp
       - -DOBS_PLUGIN_INSTALL_DIR=lib/obs-plugins
       - -DBUILD_TESTING=OFF
-      - -DTWITCH_CLIENT_ID=axvqx3om09efmaynumlt8k8adgij0f
-      - -DYOUTUBE_CLIENT_ID=252821609156-115uvrnldrsq0oketq4cepa4b28np4hs.apps.googleusercontent.com
+      - -DTWITCH_CLIENT_ID=@TWITCH_CLIENT_ID@
+      - -DYOUTUBE_CLIENT_ID=@YOUTUBE_CLIENT_ID@
     sources:
       - type: dir
         path: ../..

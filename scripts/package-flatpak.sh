@@ -28,12 +28,32 @@ fi
 
 cd "${FP_DIR}"
 
+# Inject public-client OAuth Client IDs from the environment into a working
+# copy of the manifest. These IDs are not secrets (PKCE + state + loopback
+# provide the protection); leaving them empty only disables Twitch/YouTube login.
+WORK_MANIFEST="${MANIFEST}"
+if [[ -n "${TWITCH_CLIENT_ID:-}${YOUTUBE_CLIENT_ID:-}" ]]; then
+    WORK_MANIFEST="_generated-${MANIFEST}"
+    sed -e "s|@TWITCH_CLIENT_ID@|${TWITCH_CLIENT_ID:-}|g" \
+        -e "s|@YOUTUBE_CLIENT_ID@|${YOUTUBE_CLIENT_ID:-}|g" \
+        "${MANIFEST}" > "${WORK_MANIFEST}"
+else
+    # No IDs provided: strip placeholders so the build still succeeds
+    # (generic RTMP and Facebook remain functional).
+    WORK_MANIFEST="_generated-${MANIFEST}"
+    sed -e "s|@TWITCH_CLIENT_ID@||g" \
+        -e "s|@YOUTUBE_CLIENT_ID@||g" \
+        "${MANIFEST}" > "${WORK_MANIFEST}"
+fi
+
 # Build and export to a local OSTree repo.
 ${BUILDER} --user --force-clean --install-deps-from=flathub \
-    --repo=repo build-dir "${MANIFEST}"
+    --repo=repo build-dir "${WORK_MANIFEST}"
 
 # Produce the distributable single-file bundle.
 flatpak build-bundle --runtime repo "${BUNDLE}" "${APP_ID}" "${BRANCH}"
+
+rm -f "${WORK_MANIFEST}"
 
 echo "Flatpak bundle created: ${BUNDLE}"
 echo "Install with: flatpak install --user ${BUNDLE}"

@@ -30,6 +30,8 @@ cmake --fresh -S "${ROOT_DIR}" -B "${BUILD_DIR}" -G Ninja \
     -DCMAKE_PREFIX_PATH="${OBS_PREFIX}" \
     -DCMAKE_INSTALL_PREFIX="${STAGE_DIR}" \
     -DOBS_PLUGIN_INSTALL_DIR=lib/obs-plugins \
+    -DTWITCH_CLIENT_ID="${TWITCH_CLIENT_ID:-}" \
+    -DYOUTUBE_CLIENT_ID="${YOUTUBE_CLIENT_ID:-}" \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 cmake --build "${BUILD_DIR}" --parallel
 ctest --test-dir "${BUILD_DIR}" --output-on-failure

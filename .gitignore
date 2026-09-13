@@ -28,6 +28,7 @@ SHA256SUMS
 packaging/flatpak/build-dir/
 packaging/flatpak/repo/
 packaging/flatpak/.flatpak-builder/
+packaging/flatpak/_generated-*.yaml
 
 # Editor / IDE
 .vscode/

@@ -18,12 +18,17 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  # Native .deb and .tar.gz built against the system OBS SDK.
+  deb-and-tarball:
     # The runner must provide a prepared OBS SDK because libobs and
     # obs-frontend-api are not available on a clean GitHub-hosted runner.
     runs-on: [self-hosted, linux, x64, obs-sdk]
     env:
       OBS_PREFIX: ${{ vars.OBS_PREFIX }}
+      # Public-client OAuth Client IDs (not secrets: PKCE + state + loopback
+      # provide the protection). Empty values only disable Twitch/YouTube login.
+      TWITCH_CLIENT_ID: ${{ vars.TWITCH_CLIENT_ID }}
+      YOUTUBE_CLIENT_ID: ${{ vars.YOUTUBE_CLIENT_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,14 +51,14 @@ jobs:
         shell: bash
         run: bash scripts/ci-linux.sh
 
-      - name: Generate checksums summary
+      - name: Show artifacts and checksums
         shell: bash
         run: |
           set -euo pipefail
           ls -la dist/
           cat dist/SHA256SUMS
 
-      - name: Publish GitHub Release
+      - name: Publish .deb and .tar.gz to the release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
@@ -63,3 +68,39 @@ jobs:
           files: |
             dist/*.tar.gz
             dist/SHA256SUMS
+
+  # Flatpak bundle for the OBS Studio Flatpak (com.obsproject.Studio).
+  # Runs on the same self-hosted runner, which has flatpak + org.flatpak.Builder
+  # and the com.obsproject.Studio runtime installed at --user scope.
+  flatpak:
+    runs-on: [self-hosted, linux, x64, obs-sdk]
+    needs: deb-and-tarball
+    env:
+      TWITCH_CLIENT_ID: ${{ vars.TWITCH_CLIENT_ID }}
+      YOUTUBE_CLIENT_ID: ${{ vars.YOUTUBE_CLIENT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure Flatpak build tooling
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v flatpak
+          # Builder and runtime are expected preinstalled at --user scope; make
+          # the invocation resilient by installing anything missing.
+          flatpak install -y --user --noninteractive flathub \
+            org.flatpak.Builder org.freedesktop.Sdk//25.08 com.obsproject.Studio || true
+
+      - name: Build Flatpak bundle
+        shell: bash
+        run: bash scripts/package-flatpak.sh
+
+      - name: Publish .flatpak to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: ${{ github.event.inputs.tag || github.ref_name }}
+          fail_on_unmatched_files: true
+          files: |
+            packaging/flatpak/obs-multistream-rtmp.flatpak

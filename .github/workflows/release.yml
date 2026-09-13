@@ -87,14 +87,16 @@ jobs:
         run: |
           set -euo pipefail
           command -v flatpak
+          command -v dbus-run-session
           # Builder and runtime are expected preinstalled at --user scope; make
-          # the invocation resilient by installing anything missing.
-          flatpak install -y --user --noninteractive flathub \
+          # the invocation resilient by installing anything missing. A session
+          # D-Bus is required because the runner runs headless (no X11/DISPLAY).
+          dbus-run-session -- flatpak install -y --user --noninteractive flathub \
             org.flatpak.Builder org.freedesktop.Sdk//25.08 com.obsproject.Studio || true
 
       - name: Build Flatpak bundle
         shell: bash
-        run: bash scripts/package-flatpak.sh
+        run: dbus-run-session -- bash scripts/package-flatpak.sh
 
       - name: Publish .flatpak to the release
         uses: softprops/action-gh-release@v2

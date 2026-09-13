@@ -1,0 +1,12 @@
+<RCC>
+  <qresource prefix="/icons">
+    <file>facebook_logo.png</file>
+    <file>twitch_logo.svg</file>
+    <file>tiktok_logo.svg</file>
+    <file>youtube_logo.svg</file>
+    <file>x_logo.svg</file>
+    <file>kick_logo.svg</file>
+    <file>patreon_logo.svg</file>
+    <file>add_destination.svg</file>
+  </qresource>
+</RCC>

@@ -1,0 +1,37 @@
+# Build directories
+build/
+build-*/
+build-plugin/
+dist/
+artifacts/
+cmake-build-*/
+stage/
+
+# CMake / CPack generated at source root
+CMakeCache.txt
+CMakeFiles/
+_CPack_Packages/
+CPackConfig.cmake
+CPackSourceConfig.cmake
+install_manifest.txt
+
+# Packaging artifacts
+*.deb
+*.tgz
+*.tar.gz
+*.zip
+SHA256SUMS
+
+# Editor / IDE
+.vscode/
+.idea/
+*.user
+*.user.*
+*.swp
+.DS_Store
+
+# External sub-repository published separately (GitHub Pages)
+penta-multistream-legal/
+
+# Local review notes
+semantic-review/

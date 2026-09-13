@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build the release for (e.g. v0.1.0)"
+        required: true
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    # The runner must provide a prepared OBS SDK because libobs and
+    # obs-frontend-api are not available on a clean GitHub-hosted runner.
+    runs-on: [self-hosted, linux, x64, obs-sdk]
+    env:
+      OBS_PREFIX: ${{ vars.OBS_PREFIX }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify toolchain and OBS SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v cmake
+          command -v ninja
+          test -n "${OBS_PREFIX}"
+          test -x "${OBS_PREFIX}/bin/obs"
+          OBS_VERSION_OUTPUT="$("${OBS_PREFIX}/bin/obs" --version 2>&1)"
+          printf '%s\n' "${OBS_VERSION_OUTPUT}"
+          grep -Eq '(^|[^0-9])32[.]2[.]2([^0-9]|$)' <<< "${OBS_VERSION_OUTPUT}"
+          test -f "${OBS_PREFIX}/include/obs/obs.h"
+          test -d "${OBS_PREFIX}/lib"
+
+      - name: Build, test, stage and package
+        shell: bash
+        run: bash scripts/ci-linux.sh
+
+      - name: Generate checksums summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          ls -la dist/
+          cat dist/SHA256SUMS
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: ${{ github.event.inputs.tag || github.ref_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/*.tar.gz
+            dist/SHA256SUMS

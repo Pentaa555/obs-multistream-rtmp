@@ -1,0 +1,47 @@
+name: Linux CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: linux-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test-package:
+    # The runner must provide a prepared OBS SDK because libobs and
+    # obs-frontend-api are not available on a clean GitHub-hosted runner.
+    runs-on: [self-hosted, linux, x64, obs-sdk]
+    env:
+      OBS_PREFIX: ${{ vars.OBS_PREFIX }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify toolchain and OBS SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v cmake
+          command -v ninja
+          test -n "${OBS_PREFIX}"
+          test -x "${OBS_PREFIX}/bin/obs"
+          OBS_VERSION_OUTPUT="$("${OBS_PREFIX}/bin/obs" --version 2>&1)"
+          printf '%s\n' "${OBS_VERSION_OUTPUT}"
+          grep -Eq '(^|[^0-9])32[.]2[.]2([^0-9]|$)' <<< "${OBS_VERSION_OUTPUT}"
+          test -f "${OBS_PREFIX}/include/obs/obs.h"
+          test -d "${OBS_PREFIX}/lib"
+
+      - name: Build, test, stage and package
+        shell: bash
+        run: bash scripts/ci-linux.sh
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: obs-multistream-rtmp-linux
+          path: dist/*
+          if-no-files-found: error

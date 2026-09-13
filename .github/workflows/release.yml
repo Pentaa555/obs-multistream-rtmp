@@ -31,7 +31,7 @@ jobs:
       YOUTUBE_CLIENT_ID: ${{ vars.YOUTUBE_CLIENT_ID }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Verify toolchain and OBS SDK
         shell: bash
@@ -59,7 +59,7 @@ jobs:
           cat dist/SHA256SUMS
 
       - name: Publish .deb and .tar.gz to the release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
           name: ${{ github.event.inputs.tag || github.ref_name }}
@@ -80,7 +80,7 @@ jobs:
       YOUTUBE_CLIENT_ID: ${{ vars.YOUTUBE_CLIENT_ID }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Ensure Flatpak build tooling
         shell: bash
@@ -99,7 +99,7 @@ jobs:
         run: dbus-run-session -- bash scripts/package-flatpak.sh
 
       - name: Publish .flatpak to the release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
           name: ${{ github.event.inputs.tag || github.ref_name }}

@@ -19,7 +19,7 @@ jobs:
       OBS_PREFIX: ${{ vars.OBS_PREFIX }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Verify toolchain and OBS SDK
         shell: bash
@@ -40,7 +40,7 @@ jobs:
         run: bash scripts/ci-linux.sh
 
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: obs-multistream-rtmp-linux
           path: dist/*

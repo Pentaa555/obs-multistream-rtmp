@@ -43,6 +43,7 @@
 #include <QToolButton>
 #include <QVariantAnimation>
 #include <QVBoxLayout>
+#include <QWindow>
 
 #include <algorithm>
 #include <vector>
@@ -2473,10 +2474,24 @@ void MultistreamDock::show_and_raise_dock()
 
     floating_window_->setFixedSize(fixed_size);
     setFixedSize(fixed_size);
-    QScreen *screen = floating_window_->screen();
-    if (!screen)
-        screen = QApplication::primaryScreen();
-    const QRect available = screen ? screen->availableGeometry() : QRect(0, 0, 1280, 800);
+
+    // The dock is intentionally shown as a separate top-level window. Select
+    // the screen occupied by OBS, rather than using the window manager's last
+    // screen/primary-screen choice. This matters in multi-monitor setups.
+    QScreen *obs_screen = nullptr;
+    if (auto *main_window = static_cast<QWidget *>(obs_frontend_get_main_window()))
+        obs_screen = main_window->screen();
+    if (!obs_screen)
+        obs_screen = QApplication::primaryScreen();
+
+    // Create the native window handle before selecting its screen. This avoids
+    // the window briefly appearing on the primary monitor before being moved.
+    floating_window_->createWinId();
+    if (obs_screen && floating_window_->windowHandle() &&
+        floating_window_->windowHandle()->screen() != obs_screen)
+        floating_window_->windowHandle()->setScreen(obs_screen);
+
+    const QRect available = obs_screen ? obs_screen->availableGeometry() : QRect(0, 0, 1280, 800);
     floating_window_->move(available.center() - QPoint(fixed_size.width() / 2, fixed_size.height() / 2));
     floating_window_->show();
     floating_window_->raise();

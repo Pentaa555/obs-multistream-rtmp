@@ -1,0 +1,45 @@
+# Flatpak extension manifest for the OBS Studio Flatpak (com.obsproject.Studio).
+#
+# The OBS Studio Flatpak runtime already ships libobs and obs-frontend-api
+# (headers, shared libraries and CMake config files) under /app, so this
+# extension only needs the freedesktop SDK for the toolchain and Qt 6.
+#
+# Build the .so into the plugin extension point declared by OBS:
+#   [Extension com.obsproject.Studio.Plugin] -> directory=plugins  (/app/plugins)
+#
+# The plugin's own CMakeLists installs the module into ${OBS_PLUGIN_INSTALL_DIR}
+# and its data into share/obs/obs-plugins/obs-multistream-rtmp, matching the
+# layout used by other OBS Flatpak plugins (e.g. DroidCam).
+#
+# Public-client OAuth Client IDs are baked in on purpose: they are not secrets
+# (PKCE + state + loopback provide the protection). The YouTube client secret
+# is NEVER embedded here; it is provided at runtime via libsecret if required.
+id: com.obsproject.Studio.Plugin.MultistreamRtmp
+branch: stable
+runtime: com.obsproject.Studio
+runtime-version: stable
+sdk: org.freedesktop.Sdk//25.08
+build-extension: true
+separate-locales: false
+appstream-compose: false
+
+build-options:
+  prefix: /app/plugins/MultistreamRtmp
+  # Make the OBS runtime CMake configs discoverable during the build.
+  env:
+    CMAKE_PREFIX_PATH: /app
+
+modules:
+  - name: obs-multistream-rtmp
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_PREFIX=/app/plugins/MultistreamRtmp
+      - -DOBS_PLUGIN_INSTALL_DIR=lib/obs-plugins
+      - -DBUILD_TESTING=OFF
+      - -DTWITCH_CLIENT_ID=axvqx3om09efmaynumlt8k8adgij0f
+      - -DYOUTUBE_CLIENT_ID=252821609156-115uvrnldrsq0oketq4cepa4b28np4hs.apps.googleusercontent.com
+    sources:
+      - type: dir
+        path: ../..

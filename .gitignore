@@ -20,7 +20,13 @@ install_manifest.txt
 *.tgz
 *.tar.gz
 *.zip
+*.flatpak
 SHA256SUMS
+
+# Flatpak build outputs
+packaging/flatpak/build-dir/
+packaging/flatpak/repo/
+packaging/flatpak/.flatpak-builder/
 
 # Editor / IDE
 .vscode/

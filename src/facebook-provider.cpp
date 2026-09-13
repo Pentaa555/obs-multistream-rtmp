@@ -5,6 +5,8 @@
 #include "secure-token-store.hpp"
 
 #include <QDialog>
+#include <QHostAddress>
+#include <QHostInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>

@@ -5,6 +5,8 @@
 #include <QJsonObject>
 #include <QUrlQuery>
 
+#include <cstring>
+
 namespace multistream {
 namespace {
 
@@ -99,6 +101,53 @@ bool parse_facebook_oauth_values(const std::string &access_token, const std::str
         return false;
     }
     token = access_token;
+    return true;
+}
+
+bool parse_facebook_pasted_input(const std::string &pasted, const std::string &expected_state,
+                                 std::string &token, std::string &error)
+{
+    token.clear();
+    error.clear();
+
+    QString value = QString::fromStdString(pasted).trimmed();
+    if (value.isEmpty()) {
+        error = "Paste the connection code or the Facebook URL first.";
+        return false;
+    }
+
+    // Shape 1: bridge-page code "mstoken:v1:<access_token>:<state>".
+    if (value.startsWith(QStringLiteral("mstoken:v1:"))) {
+        const QString rest = value.mid(static_cast<int>(std::strlen("mstoken:v1:")));
+        const int separator = rest.lastIndexOf(QLatin1Char(':'));
+        const QString access_token = separator >= 0 ? rest.left(separator) : rest;
+        const QString state = separator >= 0 ? rest.mid(separator + 1) : QString();
+        return parse_facebook_oauth_values(access_token.toStdString(), state.toStdString(), {}, {},
+                                           expected_state, token, error);
+    }
+
+    // Shape 2: a full redirect URL (login_success.html or the bridge page).
+    if (value.startsWith(QStringLiteral("http://")) || value.startsWith(QStringLiteral("https://"))) {
+        const QUrl url(value, QUrl::TolerantMode);
+        const QString source = !url.fragment().isEmpty() ? url.fragment() : url.query();
+        const QUrlQuery params(source);
+        const QString error_description = params.queryItemValue("error_description");
+        if (!error_description.isEmpty()) {
+            error = error_description.toStdString();
+            return false;
+        }
+        const QString access_token = params.queryItemValue("access_token");
+        const QString state = params.queryItemValue("state");
+        if (access_token.isEmpty()) {
+            error = "The pasted URL does not contain a Facebook access token.";
+            return false;
+        }
+        return parse_facebook_oauth_values(access_token.toStdString(), state.toStdString(), {}, {},
+                                           expected_state, token, error);
+    }
+
+    // Shape 3: a bare access token. State cannot be verified in this case.
+    token = value.toStdString();
     return true;
 }
 

@@ -14,6 +14,17 @@
 # Public-client OAuth Client IDs are baked in on purpose: they are not secrets
 # (PKCE + state + loopback provide the protection). The YouTube client secret
 # is NEVER embedded here; it is provided at runtime via libsecret if required.
+#
+# NOTE ON TOKEN PERSISTENCE (libsecret / Secret Service):
+# This plugin stores OAuth tokens in the OS keyring via libsecret. The OBS
+# Studio Flatpak does NOT grant access to the "org.freedesktop.secrets" D-Bus
+# service by default, and a Flatpak *extension* cannot add D-Bus permissions to
+# its host app. Without that permission the token cannot be saved and the user
+# must reconnect every launch. After installing this extension, grant OBS access
+# to the keyring once:
+#
+#   flatpak override --user --talk-name=org.freedesktop.secrets com.obsproject.Studio
+#
 id: com.obsproject.Studio.Plugin.MultistreamRtmp
 branch: stable
 runtime: com.obsproject.Studio

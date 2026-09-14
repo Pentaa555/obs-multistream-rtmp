@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 
-project(obs-multistream-rtmp VERSION 0.1.0 LANGUAGES CXX)
+project(obs-multistream-rtmp VERSION 0.1.1 LANGUAGES CXX)
 
 set(OBS_VALIDATED_VERSION "32.2.2" CACHE STRING
     "OBS Studio version validated for the Linux distribution artifact")
